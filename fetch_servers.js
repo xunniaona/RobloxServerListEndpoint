@@ -8,6 +8,9 @@ const PLACE_ID = 109983668079237;
 const PAGE_LIMIT = 100;
 const OUTPUT_FILE = path.join(__dirname, "server_list.json");
 
+let pageCount = 0;
+const MAX_PAGES = 3;
+
 async function fetchPage(cursor) {
   let url = `https://games.roblox.com/v1/games/${PLACE_ID}/servers/Public?sortOrder=Desc&limit=${PAGE_LIMIT}`;
   if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
@@ -46,6 +49,9 @@ async function fetchPage(cursor) {
           });
         }
       }
+
+      pageCount++;
+      if (pageCount >= MAX_PAGES) break;
 
       cursor = data.nextPageCursor;
       if (!cursor) break;
