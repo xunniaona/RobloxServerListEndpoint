@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Server List</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; }
+    pre { background:#f6f8fa; padding:10px; border-radius:6px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Roblox Server List (Place 109983668079237)</h1>
+  <p>Last updated: <span id="updated">loading…</span></p>
+  <pre id="raw"></pre>
+  <table id="tbl" style="display:none">
+    <thead><tr><th>#</th><th>Server ID</th><th>Players</th><th>Max</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    async function load() {
+      try {
+        const r = await fetch("server_list.json");
+        const j = await r.json();
+        document.getElementById("updated").textContent = new Date(j.fetched_at * 1000).toLocaleString();
+        document.getElementById("raw").textContent = JSON.stringify(j, null, 2);
+        const tb = document.querySelector("#tbl tbody");
+        j.servers.forEach((s,i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${i+1}</td><td>${s.id}</td><td>${s.playing}</td><td>${s.maxPlayers}</td>`;
+          tb.appendChild(tr);
+        });
+        document.getElementById("tbl").style.display = "table";
+      } catch(e) {
+        document.getElementById("raw").textContent = "Error: " + e.message;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
