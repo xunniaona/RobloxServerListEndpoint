@@ -28,9 +28,10 @@ async function fetchPage(cursor) {
         data = await fetchPage(cursor);
       } catch (err) {
         tries++;
-        if (tries > 3) throw err;
-        console.warn("Fetch page failed, retrying:", err.message);
-        await new Promise(r => setTimeout(r, 1000 * tries));
+        if (tries > 5) throw err;
+        const delay = 30 * tries; // 30s, 60s, 90s...
+        console.warn("Fetch page failed (429?), retrying after", delay, "seconds");
+        await new Promise(r => setTimeout(r, delay * 1000));
         continue;
       }
 
