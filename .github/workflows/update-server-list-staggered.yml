@@ -1,0 +1,39 @@
+name: Update Roblox Server List (slot B - staggered)
+
+on:
+  schedule:
+    - cron: '2-59/5 * * * *'   # minutes 2 + 5,10,15,20
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run fetch script
+        run: node fetch_servers.js
+
+      - name: Commit and push if changed (pull/rebase first)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git pull --rebase origin ${{ github.ref_name || 'main' }} || true
+          git add server_list.json || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update server_list.json (B)"
+            git push origin HEAD:${{ github.ref_name || 'main' }}
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
