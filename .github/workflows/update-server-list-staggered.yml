@@ -30,7 +30,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git"
           git pull --rebase origin ${{ github.ref_name || 'main' }} || true
-          git add server_list.json || true
+          git add server_list.json raw_responses || true
           if git diff --cached --quiet; then
             echo "No changes"
           else
