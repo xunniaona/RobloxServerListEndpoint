@@ -13,12 +13,19 @@ if (!fs.existsSync(RAW_DIR)) {
   fs.mkdirSync(RAW_DIR, { recursive: true });
 }
 
+// wipe old raw responses
+for (const f of fs.readdirSync(RAW_DIR)) {
+  try {
+    fs.unlinkSync(path.join(RAW_DIR, f));
+  } catch (e) {
+    console.warn("Could not remove old file:", f, e.message);
+  }
+}
+
 let pageCount = 0;
 const MAX_PAGES = 3;
 
-// use the global fetch (Node 18+)
 const doFetch = globalThis.fetch;
-
 if (typeof doFetch !== "function") {
   console.error("fetch is not available in this environment. Node 18+ required.");
   process.exit(1);
@@ -28,9 +35,8 @@ async function fetchPage(cursor) {
   let url = `https://games.roblox.com/v1/games/${PLACE_ID}/servers/Public?sortOrder=Desc&limit=${PAGE_LIMIT}`;
   if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
   const res = await doFetch(url);
-  const text = await res.text(); // read text to allow debug on non-json responses
+  const text = await res.text();
   if (!res.ok) {
-    // try to include helpful body preview for debugging
     const preview = text.length > 1000 ? text.slice(0, 1000) + "..." : text;
     console.error("API error response preview:", preview);
     const err = new Error(`Roblox API error: ${res.status}`);
@@ -38,11 +44,10 @@ async function fetchPage(cursor) {
     err.body = text;
     throw err;
   }
-  // parse JSON from the text we already read
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.error("Failed to parse JSON from Roblox response. Preview:", text.slice(0, 200));
+    console.error("Failed to parse JSON. Preview:", text.slice(0, 200));
     throw e;
   }
 }
@@ -61,7 +66,6 @@ function writeIfDifferent(filepath, contentStr) {
 
 (async () => {
   try {
-    // reset counters per run
     pageCount = 0;
     const servers = [];
     let cursor = null;
@@ -73,17 +77,18 @@ function writeIfDifferent(filepath, contentStr) {
         data = await fetchPage(cursor);
       } catch (err) {
         tries++;
-        // special-case 429 -> longer backoff
         const status = err && err.status;
         if (tries > 6) throw err;
-        const baseDelay = status === 429 ? 60 : 10; // 60s on 429, otherwise 10s
-        const delay = baseDelay * tries; // progressive: 60,120,... or 10,20,...
-        console.warn(`Fetch page failed (status ${status || "unknown"}). Retrying after ${delay}s (attempt ${tries})`);
+        const baseDelay = status === 429 ? 60 : 10;
+        const delay = baseDelay * tries;
+        console.warn(
+          `Fetch page failed (status ${status || "unknown"}). Retrying after ${delay}s (attempt ${tries})`
+        );
         await new Promise(r => setTimeout(r, delay * 1000));
         continue;
       }
 
-      // Save raw response to file (pageCount + 1 because pageCount starts at 0)
+      // Save raw 
       try {
         const rawFilename = path.join(RAW_DIR, `page_${pageCount + 1}.json`);
         fs.writeFileSync(rawFilename, JSON.stringify(data, null, 2), "utf8");
@@ -95,7 +100,14 @@ function writeIfDifferent(filepath, contentStr) {
       tries = 0;
       const list = Array.isArray(data.data) ? data.data : [];
       for (const s of list) {
-        if (s && typeof s.playing === "number" && typeof s.maxPlayers === "number" && s.playing < s.maxPlayers) {
+        // strip inactive (playing == 0) and full (playing >= maxPlayers)
+        if (
+          s &&
+          typeof s.playing === "number" &&
+          typeof s.maxPlayers === "number" &&
+          s.playing > 0 &&
+          s.playing < s.maxPlayers
+        ) {
           servers.push({
             id: s.id,
             playing: s.playing,
@@ -117,7 +129,6 @@ function writeIfDifferent(filepath, contentStr) {
         break;
       }
 
-      // small friendly delay between pages
       await new Promise(r => setTimeout(r, 500));
     }
 
@@ -129,7 +140,6 @@ function writeIfDifferent(filepath, contentStr) {
 
     const outStr = JSON.stringify(payload, null, 2);
 
-    // only write server_list.json if contents changed to reduce commit churn
     const wrote = writeIfDifferent(OUTPUT_FILE, outStr);
     if (wrote) {
       console.log(`Wrote ${servers.length} servers to ${OUTPUT_FILE}`);
@@ -141,7 +151,6 @@ function writeIfDifferent(filepath, contentStr) {
   } catch (err) {
     console.error("Fatal:", err && err.message || err);
     if (err && err.body) {
-      // optional: helpful debug output
       const preview = err.body.slice ? err.body.slice(0, 800) : String(err.body);
       console.error("Response body preview:", preview);
     }
