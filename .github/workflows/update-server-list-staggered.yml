@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false   # Disable default GITHUB_TOKEN to use PAT
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,10 +23,12 @@ jobs:
         run: node fetch_servers.js
 
       - name: Commit and push if changed (pull/rebase first)
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git"
           git pull --rebase origin ${{ github.ref_name || 'main' }} || true
           git add server_list.json || true
           if git diff --cached --quiet; then
@@ -35,5 +37,3 @@ jobs:
             git commit -m "Update server_list.json (B)"
             git push origin HEAD:${{ github.ref_name || 'main' }}
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
