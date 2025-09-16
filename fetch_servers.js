@@ -98,9 +98,11 @@ function writeIfDifferent(filepath, contentStr) {
       }
 
       tries = 0;
-      const list = Array.isArray(data.data) ? data.data : [];
+      const list = Array.isArray(data.data) ? data.data : []; 
+      /*
       for (const s of list) {
         // strip inactive (playing == 0) and full (playing >= maxPlayers)
+
         if (
           s &&
           typeof s.playing === "number" &&
@@ -116,6 +118,7 @@ function writeIfDifferent(filepath, contentStr) {
           });
         }
       }
+      */
 
       pageCount++;
       if (pageCount >= MAX_PAGES) {
