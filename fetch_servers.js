@@ -102,7 +102,7 @@ function writeIfDifferent(filepath, contentStr) {
 
       // Push all servers
       for (const s of list) {
-        if (s && typeof s.id === "string") {
+        if (s && typeof s.id === "string" && s.playing < s.maxPlayers) {
           servers.push({
             id: s.id,
             playing: s.playing || 0,
