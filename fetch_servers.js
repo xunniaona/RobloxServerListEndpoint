@@ -88,7 +88,7 @@ function writeIfDifferent(filepath, contentStr) {
         continue;
       }
 
-      // Save raw 
+      // Save raw
       try {
         const rawFilename = path.join(RAW_DIR, `page_${pageCount + 1}.json`);
         fs.writeFileSync(rawFilename, JSON.stringify(data, null, 2), "utf8");
@@ -98,27 +98,19 @@ function writeIfDifferent(filepath, contentStr) {
       }
 
       tries = 0;
-      const list = Array.isArray(data.data) ? data.data : []; 
-      /*
-      for (const s of list) {
-        // strip inactive (playing == 0) and full (playing >= maxPlayers)
+      const list = Array.isArray(data.data) ? data.data : [];
 
-        if (
-          s &&
-          typeof s.playing === "number" &&
-          typeof s.maxPlayers === "number" &&
-          s.playing > 0 &&
-          s.playing < s.maxPlayers
-        ) {
+      // Push all servers
+      for (const s of list) {
+        if (s && typeof s.id === "string") {
           servers.push({
             id: s.id,
-            playing: s.playing,
-            maxPlayers: s.maxPlayers,
+            playing: s.playing || 0,
+            maxPlayers: s.maxPlayers || 0,
             created: s.created || null
           });
         }
-      } test
-      */
+      }
 
       pageCount++;
       if (pageCount >= MAX_PAGES) {
