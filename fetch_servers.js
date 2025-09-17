@@ -32,7 +32,7 @@ if (typeof doFetch !== "function") {
 }
 
 async function fetchPage(cursor) {
-  let url = `https://games.roblox.com/v1/games/${PLACE_ID}/servers/Public?sortOrder=Desc&limit=${PAGE_LIMIT}`;
+  let url = `https://games.roblox.com/v1/games/${PLACE_ID}/servers/Public?sortOrder=Desc&limit=${PAGE_LIMIT}&excludeFullGames=true`;
   if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
   const res = await doFetch(url);
   const text = await res.text();
