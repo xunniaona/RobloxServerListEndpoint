@@ -1,8 +1,8 @@
 name: Update Roblox Server List (slot B - staggered)
 
 on:
-  schedule:
-    - cron: '2-59/5 * * * *'   # minutes 2 + 5,10,15,20
+  #schedule:
+   #- cron: '2-59/5 * * * *'   # minutes 2 + 5,10,15,20
   workflow_dispatch: {}
 
 jobs:
