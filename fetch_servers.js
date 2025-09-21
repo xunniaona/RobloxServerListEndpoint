@@ -23,7 +23,7 @@ for (const f of fs.readdirSync(RAW_DIR)) {
 }
 
 let pageCount = 0;
-const MAX_PAGES = 5;
+const MAX_PAGES = 6;
 
 const doFetch = globalThis.fetch;
 if (typeof doFetch !== "function") {
