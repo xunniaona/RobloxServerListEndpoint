@@ -24,7 +24,7 @@ jobs:
 
       - name: Commit and push if changed (stash, pull/rebase, then reapply)
         env:
-          PAT_TOKEN: ${{ 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 }}
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
