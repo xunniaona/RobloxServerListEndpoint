@@ -8,11 +8,13 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # allow pushes with GITHUB_TOKEN
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true  # keep GITHUB_TOKEN for pushing
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,20 +25,9 @@ jobs:
         run: node fetch_servers.js
 
       - name: Commit and push if changed (stash, pull/rebase, then reapply)
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          REMOTE_URL="https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git"
-          git remote set-url origin "$REMOTE_URL"
-          
-          echo "Remote URL: $(git remote get-url origin)"
-          if [[ "$(git remote get-url origin)" != *.git ]]; then
-            echo "Error: Remote URL malformed (trailing slash or invalid)."
-            exit 1
-          fi
 
           echo "Git status before stash:"
           git status
@@ -74,7 +65,7 @@ jobs:
             git commit -m "Update server_list.json (A)"
             echo "Pushing to origin/$BRANCH"
             if ! git push origin HEAD:"$BRANCH"; then
-              echo "Push failed. Check PAT permissions or URL."
+              echo "Push failed. Check repo permissions."
               exit 1
             fi
             echo "Push successful."
